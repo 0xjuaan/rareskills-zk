@@ -77,9 +77,9 @@ contract Pairing {
             inputData[5 + j] = g2Points[i].y2;
         }
 
-        //bool success = pairing(A1, B2, alpha1, beta2, X1, gamma2, C1, delta2);
+        bool success = pairing(A1, B2, alpha1, beta2, X1, gamma2, C1, delta2);
         
-        (bool success, ) = address(8).staticcall(abi.encodePacked(inputData));
+        //(bool success, ) = address(8).staticcall(abi.encodePacked(inputData));
         
         /*(bool success, ) = address(8).staticcall(abi.encode(
             inputData[0], inputData[1], inputData[2], inputData[3], inputData[4], inputData[5],
@@ -126,16 +126,12 @@ contract Pairing {
 
         // solium-disable-next-line security/no-inline-assembly
         assembly {
-        success := staticcall(sub(gas(), 2000), 8, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
-        // Use "invalid" to make gas estimation work
-        switch success case 0 { invalid() }
+        success := staticcall(gas(), 8, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
         }
+        return success;
 
 
-        require(success, "pairing-opcode-failed");
 
-
-        return out[0] != 0;
     }
     
 
