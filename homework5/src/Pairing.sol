@@ -60,7 +60,7 @@ contract Pairing {
         console.log("x is ", X1.x);
         console.log("y is ", X1.y);
 
-        G1Point[4] memory g1Points = [(A1), alpha1, X1, C1];
+        G1Point[4] memory g1Points = [_negate(A1), alpha1, X1, C1];
         G2Point[4] memory g2Points = [B2, beta2, gamma2, delta2];
 
         uint256[] memory inputData = new uint256[](6 * 4);
