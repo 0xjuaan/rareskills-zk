@@ -2,23 +2,26 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {Counter} from "../src/Counter.sol";
+import {Pairing} from "../src/Pairing.sol";
 
-contract CounterTest is Test {
-    Counter public counter;
-
+contract PairingTest is Test {
+    Pairing pairing;
     function setUp() public {
-        counter = new Counter();
-        counter.setNumber(0);
+        pairing = new Pairing();
     }
 
-    function test_Increment() public {
-        counter.increment();
-        assertEq(counter.number(), 1);
-    }
+    function test_pairing() public {
+        Pairing.G1Point memory A1 = Pairing.G1Point(4312786488925573964619847916436127219510912864504589785209181363209026354996, 5726895189999605970381740277553993677404075722249076567701130181735286328132);
+        Pairing.G1Point memory C1 = Pairing.G1Point(17108685722251241369314020928988529881027530433467445791267465866135602972753, 20666112440056908034039013737427066139426903072479162670940363761207457724060);
 
-    function testFuzz_SetNumber(uint256 x) public {
-        counter.setNumber(x);
-        assertEq(counter.number(), x);
+        Pairing.G2Point memory B2 = Pairing.G2Point( {
+            x1: 20954117799226682825035885491234530437475518021362091509513177301640194298072,
+            y1: 4540444681147253467785307942530223364530218361853237193970751657229138047649,
+            x2: 21508930868448350162258892668132814424284302804699005394342512102884055673846,
+            y2: 11631839690097995216017572651900167465857396346217730511548857041925508482915
+        }
+        );
+        bool succ = pairing.check(A1, B2, C1, 2, 2, 2);
+        assertTrue(succ);
     }
 }
