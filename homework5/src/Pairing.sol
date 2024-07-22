@@ -17,7 +17,7 @@ contract Pairing {
     }
 
     uint256 constant G1_ORDER = 0x30644E72E131A029B85045B68181585D2833E84879B9709143E1F593F0000001;
-
+    uint256 constant FIELD_MODULUS = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47;
     G1Point G1;
     G1Point alpha1;
     G1Point X1;
@@ -57,8 +57,9 @@ contract Pairing {
 
         (X1.x, X1.y) = _calculateX1(x1, x2, x3);
 
-        console.log("x is ", X1.x);
-        console.log("y is ", X1.y);
+        console.log("A1.x", A1.x);
+        console.log("A1.y", A1.y);
+        console.log("neg(A1).y", _negate(A1).y);
 
         G1Point[4] memory g1Points = [_negate(A1), alpha1, X1, C1];
         G2Point[4] memory g2Points = [B2, beta2, gamma2, delta2];
@@ -71,24 +72,27 @@ contract Pairing {
             inputData[0 + j] = g1Points[i].x;
             inputData[1 + j] = g1Points[i].y;
 
-            inputData[2 + j] = g2Points[i].x1;
-            inputData[3 + j] = g2Points[i].x2;
-            inputData[4 + j] = g2Points[i].y1;
-            inputData[5 + j] = g2Points[i].y2;
+            inputData[2 + j] = g2Points[i].y1;
+            inputData[3 + j] = g2Points[i].x1;
+            inputData[4 + j] = g2Points[i].y2;
+            inputData[5 + j] = g2Points[i].x2;
         }
 
-        bool success = pairing(A1, B2, alpha1, beta2, X1, gamma2, C1, delta2);
         
-        //(bool success, ) = address(8).staticcall(abi.encodePacked(inputData));
-        
-        /*(bool success, ) = address(8).staticcall(abi.encode(
+        (bool success, ) = address(8).staticcall(abi.encodePacked(inputData));
+        return success;
+
+        //bool success = pairing(A1, B2, alpha1, beta2, X1, gamma2, C1, delta2);
+
+        /*
+        (bool success, ) = address(8).staticcall(abi.encode(
             inputData[0], inputData[1], inputData[2], inputData[3], inputData[4], inputData[5],
             inputData[6], inputData[7], inputData[8], inputData[9], inputData[10], inputData[11],
             inputData[12], inputData[13], inputData[14], inputData[15], inputData[16], inputData[17],
             inputData[18], inputData[19], inputData[20], inputData[21], inputData[22], inputData[23] 
-            ));*/
+        ));
+        */
 
-        return success;
     }    
 
     function pairing(
@@ -113,10 +117,11 @@ contract Pairing {
         uint256 j = i * 6;
         input[j + 0] = p1[i].x;
         input[j + 1] = p1[i].y;
-        input[j + 2] = p2[i].x1;
-        input[j + 3] = p2[i].x2;
-        input[j + 4] = p2[i].y1;
-        input[j + 5] = p2[i].y2;
+
+        input[j + 2] = p2[i].y1;
+        input[j + 3] = p2[i].x1;
+        input[j + 4] = p2[i].y2;
+        input[j + 5] = p2[i].x2;
         }
 
 
@@ -165,6 +170,6 @@ contract Pairing {
 
     function _negate(G1Point memory p) internal pure returns(G1Point memory) {
         if (p.x == 0 && p.y == 0) return G1Point(0, 0);
-        else return G1Point(p.x, G1_ORDER - p.y);
+        else return G1Point(p.x, FIELD_MODULUS - p.y);
     }
 }
