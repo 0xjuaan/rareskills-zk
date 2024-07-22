@@ -57,11 +57,7 @@ contract Pairing {
 
         (X1.x, X1.y) = _calculateX1(x1, x2, x3);
 
-        console.log("A1.x", A1.x);
-        console.log("A1.y", A1.y);
-        console.log("neg(A1).y", _negate(A1).y);
-
-        G1Point[4] memory g1Points = [_negate(A1), alpha1, X1, C1];
+        G1Point[4] memory g1Points = [_neg(A1), alpha1, X1, C1];
         G2Point[4] memory g2Points = [B2, beta2, gamma2, delta2];
 
         uint256[] memory inputData = new uint256[](6 * 4);
@@ -78,67 +74,11 @@ contract Pairing {
             inputData[5 + j] = g2Points[i].x2;
         }
 
-        
-        (bool success, ) = address(8).staticcall(abi.encodePacked(inputData));
-        return success;
+        (bool success, bytes memory data) = address(8).staticcall(abi.encodePacked(inputData));
 
-        //bool success = pairing(A1, B2, alpha1, beta2, X1, gamma2, C1, delta2);
-
-        /*
-        (bool success, ) = address(8).staticcall(abi.encode(
-            inputData[0], inputData[1], inputData[2], inputData[3], inputData[4], inputData[5],
-            inputData[6], inputData[7], inputData[8], inputData[9], inputData[10], inputData[11],
-            inputData[12], inputData[13], inputData[14], inputData[15], inputData[16], inputData[17],
-            inputData[18], inputData[19], inputData[20], inputData[21], inputData[22], inputData[23] 
-        ));
-        */
-
+        bool valid = abi.decode(data, (bool));
+        return (success && valid);
     }    
-
-    function pairing(
-        G1Point memory a1,
-        G2Point memory a2,
-        G1Point memory b1,
-        G2Point memory b2,
-        G1Point memory c1,
-        G2Point memory c2,
-        G1Point memory d1,
-        G2Point memory d2
-    ) internal view returns (bool) {
-        G1Point[4] memory p1 = [a1, b1, c1, d1];
-        G2Point[4] memory p2 = [a2, b2, c2, d2];
-
-
-        uint256 inputSize = 24;
-        uint256[] memory input = new uint256[](inputSize);
-
-
-        for (uint256 i = 0; i < 4; i++) {
-        uint256 j = i * 6;
-        input[j + 0] = p1[i].x;
-        input[j + 1] = p1[i].y;
-
-        input[j + 2] = p2[i].y1;
-        input[j + 3] = p2[i].x1;
-        input[j + 4] = p2[i].y2;
-        input[j + 5] = p2[i].x2;
-        }
-
-
-        uint256[1] memory out;
-        bool success;
-
-
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-        success := staticcall(gas(), 8, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
-        }
-        return success;
-
-
-
-    }
-    
 
     function _addEC(uint256 x1, uint256 y1, uint256 x2, uint256 y2) internal view returns (uint256, uint256) {
         (bool ok, bytes memory result) = address(6).staticcall(abi.encode(x1, y1, x2, y2));
@@ -168,7 +108,7 @@ contract Pairing {
         (x, y) = _addEC(intermediate.x, intermediate.y, p3.x, p3.y);
     }
 
-    function _negate(G1Point memory p) internal pure returns(G1Point memory) {
+    function _neg(G1Point memory p) internal pure returns(G1Point memory) {
         if (p.x == 0 && p.y == 0) return G1Point(0, 0);
         else return G1Point(p.x, FIELD_MODULUS - p.y);
     }
